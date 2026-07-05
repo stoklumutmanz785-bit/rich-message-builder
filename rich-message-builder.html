@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Rich Message Builder</title>
+<style>
+  :root{
+    --bg:#000000;
+    --panel:#0d1117;
+    --panel2:#141a22;
+    --line:#1f262f;
+    --text:#f2f4f6;
+    --sub:#8a94a3;
+    --accent:#2AABEE;
+    --accent-ink:#04202f;
+    --danger:#ff5c5c;
+    --danger-bg:#2a1418;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;
+    background:#000;
+  }
+  .topbar .icon-btn{
+    background:none;border:none;color:var(--text);font-size:22px;line-height:1;cursor:pointer;padding:4px;
+  }
+  .topbar h1{
+    flex:1;font-size:19px;margin:0;font-weight:700;letter-spacing:.2px;
+  }
+  .topbar .right{display:flex;align-items:center;gap:14px;}
+
+  .banner{
+    background:#161b22;
+    color:#c9d1d9;
+    font-size:13px;
+    line-height:1.45;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .banner b{color:#fff;}
+  .banner.hidden{display:none;}
+
+  /* ---------- Channel row ---------- */
+  .channel-row{
+    display:flex;align-items:center;gap:10px;
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .channel-row .back{background:none;border:none;color:var(--accent);font-size:20px;cursor:pointer;}
+  .avatar{
+    width:34px;height:34px;border-radius:50%;
+    background:linear-gradient(135deg,#2AABEE,#1a7fb5);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:15px;color:#fff;flex-shrink:0;
+  }
+  .channel-meta{flex:1;min-width:0;}
+  .channel-meta .name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .channel-meta .sub{font-size:12px;color:var(--sub);}
+  .channel-meta.empty .name{color:var(--sub);font-weight:500;}
+
+  .tabs{
+    display:flex;background:#12161c;border-radius:20px;padding:3px;flex-shrink:0;
+  }
+  .tabs button{
+    border:none;background:transparent;color:var(--sub);
+    font-size:13px;font-weight:600;padding:7px 14px;border-radius:18px;cursor:pointer;
+  }
+  .tabs button.active{background:var(--accent);color:#fff;}
+
+  /* ---------- Editor body ---------- */
+  .editor{flex:1;overflow-y:auto;padding-bottom:170px;}
+
+  .block-card{
+    background:var(--panel);
+    margin:10px 14px;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+  .block-card .b-body{padding:14px 14px 8px;}
+  .block-card input[type=text],
+  .block-card input[type=url],
+  .block-card input[type=number],
+  .block-card textarea{
+    width:100%;background:transparent;border:none;color:var(--text);
+    font-size:15px;font-family:inherit;resize:none;outline:none;padding:6px 0;
+  }
+  .block-card textarea{min-height:44px;}
+  .block-card input::placeholder,.block-card textarea::placeholder{color:#5b6472;}
+  .field-label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-top:8px;display:block;}
+  .field-row{display:flex;gap:8px;}
+  .field-row > *{flex:1;}
+
+  .b-foot{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 14px;border-top:1px solid var(--line);background:#0a0d12;
+  }
+  .b-type-label{font-size:11px;letter-spacing:1px;color:var(--sub);font-weight:700;text-transform:uppercase;}
+  .b-actions{display:flex;gap:6px;}
+  .chip-btn{
+    border:none;border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;gap:5px;background:#1b2129;color:var(--text);
+  }
+  .chip-btn.danger{background:var(--danger-bg);color:var(--danger);}
+  .reorder-btns{display:flex;gap:2px;margin-right:auto;}
+  .reorder-btns button{background:none;border:none;color:var(--sub);font-size:13px;cursor:pointer;padding:2px 6px;}
+
+  .list-item-row,.table-row,.media-url-row{display:flex;gap:8px;align-items:center;margin-top:6px;}
+  .list-item-row input,.media-url-row input{flex:1;}
+  .row-x{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:2px 6px;}
+  .add-sub-btn{
+    margin-top:8px;background:none;border:1px dashed #2c3542;color:var(--accent);
+    border-radius:8px;padding:8px;font-size:13px;font-weight:600;width:100%;cursor:pointer;
+  }
+  .table-grid{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
+  .table-row{display:flex;gap:6px;}
+  .table-row input{flex:1;background:#12161c;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13px;}
+
+  /* ---------- Tombol (buttons) section ---------- */
+  .section-title{
+    padding:14px 16px 4px;font-size:12px;font-weight:700;color:var(--sub);
+    text-transform:uppercase;letter-spacing:.6px;
+  }
+  .section-desc{padding:0 16px 8px;font-size:12.5px;color:var(--sub);line-height:1.4;}
+
+  .btn-card{
+    background:var(--panel);margin:0 14px 10px;border-radius:var(--radius);
+    border:1px solid var(--line);padding:12px;position:relative;
+  }
+  .btn-kind-toggle{display:flex;gap:6px;margin-bottom:10px;}
+  .btn-kind-toggle button{
+    border:none;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer;
+    background:#161b22;color:var(--sub);display:flex;align-items:center;gap:5px;
+  }
+  .btn-kind-toggle button.active{background:var(--accent);color:#fff;}
+  .style-swatch-row{display:flex;gap:6px;margin:6px 0 10px;}
+  .style-swatch{
+    flex:1;border:2px solid transparent;border-radius:8px;padding:7px 4px;
+    font-size:11.5px;font-weight:700;cursor:pointer;text-align:center;background:#161b22;color:var(--sub);
+  }
+  .style-swatch[data-style="primary"]{background:#2894e5;color:#fff;}
+  .style-swatch[data-style="success"]{background:#31b545;color:#fff;}
+  .style-swatch[data-style="danger"]{background:#e0473f;color:#fff;}
+  .style-swatch.active{border-color:#fff;}
+  .btn-card input{width:100%;background:#12161c;border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:9px 10px;font-size:14px;margin-top:6px;outline:none;}
+  .btn-card input::placeholder{color:#5b6472;}
+  .btn-remove{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;}
+
+  .add-block-pill{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    margin:16px auto 8px;background:#12161c;border:1px solid #24303c;color:var(--accent);
+    font-weight:700;font-size:14px;padding:11px 22px;border-radius:24px;cursor:pointer;width:calc(100% - 28px);
+  }
+
+  /* ---------- Bottom bar ---------- */
+  .bottombar{
+    position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+    width:100%;max-width:480px;background:#000;border-top:1px solid var(--line);
+  }
+  .save-draft{
+    text-align:center;color:var(--accent);font-weight:600;font-size:14px;padding:12px;cursor:pointer;
+    border-bottom:1px solid var(--line);
+  }
+  .post-btn{
+    display:block;width:100%;background:var(--accent);color:#fff;border:none;
+    font-size:16px;font-weight:700;padding:16px;cursor:pointer;letter-spacing:.4px;
+  }
+  .post-btn:disabled{opacity:.6;cursor:default;}
+  .post-btn.err{background:var(--danger);}
+
+  /* ---------- Bottom sheets ---------- */
+  .sheet-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  .sheet-overlay.open{display:flex;}
+  .sheet{
+    background:#0d1117;width:100%;max-width:480px;border-radius:20px 20px 0 0;
+    max-height:82vh;overflow-y:auto;padding:10px 16px 24px;
+  }
+  .sheet-handle{width:36px;height:4px;background:#333;border-radius:3px;margin:6px auto 14px;}
+  .sheet h2{font-size:18px;margin:0 0 14px;}
+  .block-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;}
+  .block-opt{background:none;border:none;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;padding:4px 0;}
+  .block-opt .ic{
+    width:52px;height:52px;border-radius:14px;background:#161d26;color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;
+  }
+  .block-opt span{font-size:11.5px;color:#c9d1d9;text-align:center;}
+  .group-label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px;}
+
+  .settings-field{margin-bottom:14px;}
+  .settings-field label{font-size:12.5px;color:var(--sub);display:block;margin-bottom:6px;font-weight:600;}
+  .settings-field input{
+    width:100%;background:#12161c;border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:11px 12px;font-size:14px;outline:none;
+  }
+  .settings-hint{font-size:12px;color:var(--sub);line-height:1.5;margin:6px 0 18px;}
+  .settings-actions{display:flex;gap:10px;}
+  .settings-actions button{
+    flex:1;border:none;border-radius:10px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-secondary{background:#1b2129;color:var(--text);}
+  .status-line{font-size:12.5px;margin-top:10px;padding:10px;border-radius:8px;line-height:1.4;}
+  .status-line.ok{background:#0e2a1a;color:#6fdc9a;}
+  .status-line.bad{background:var(--danger-bg);color:var(--danger);}
+
+  /* ---------- Preview ---------- */
+  .preview-wrap{padding:16px;}
+  .preview-day{text-align:center;color:var(--sub);font-size:12px;margin:6px 0 16px;}
+  .bubble{
+    background:#182533;border-radius:14px;padding:12px 14px;max-width:100%;
+  }
+  .bubble .from{color:var(--accent);font-weight:700;font-size:13.5px;margin-bottom:6px;}
+  .bubble-content{font-size:14.5px;line-height:1.5;color:#eef2f6;word-wrap:break-word;}
+  .bubble-content b,.bubble-content strong{color:#fff;}
+  .rich-block:first-child > *:first-child{margin-top:0;}
+  .rich-block:last-child > *:last-child{margin-bottom:0;}
+
+  /* Headings (RichBlockSectionHeading) */
+  .bubble-content h1,.bubble-content h2,.bubble-content h3,
+  .bubble-content h4,.bubble-content h5,.bubble-content h6{
+    margin:10px 0 4px;color:#fff;font-weight:700;line-height:1.3;
+  }
+  .bubble-content h1{font-size:19px;} .bubble-content h2{font-size:17px;}
+  .bubble-content h3{font-size:15.5px;} .bubble-content h4,.bubble-content h5,.bubble-content h6{font-size:14.5px;}
+  .bubble-content p{margin:4px 0;}
+  .bubble-content ul,.bubble-content ol{margin:6px 0;padding-left:20px;}
+  .bubble-content li{margin:2px 0;}
+
+  /* Quotes */
+  .bubble-content blockquote{
+    margin:8px 0;padding:8px 10px;border-left:3px solid var(--accent);background:rgba(42,171,238,.08);
+    border-radius:4px;font-style:italic;
+  }
+  .bubble-content tg-pullquote{
+    display:block;text-align:center;font-size:16px;font-weight:700;color:#fff;
+    padding:12px 6px;margin:10px 0;border-top:1px solid #33414f;border-bottom:1px solid #33414f;
+  }
+
+  /* Code + math (RichBlockPreformatted / RichBlockMathematicalExpression) */
+  .bubble-content pre{
+    background:#0c1319;border-radius:8px;padding:10px;font-family:"SF Mono",Consolas,monospace;
+    font-size:12.5px;overflow-x:auto;margin:8px 0;
+  }
+  .bubble-content tg-math{
+    display:block;background:#0c1319;border-radius:8px;padding:10px 12px;margin:8px 0;
+    font-family:"SF Mono",Consolas,monospace;font-size:13px;text-align:center;overflow-x:auto;
+  }
+
+  /* Divider + footer (RichBlockDivider / RichBlockFooter) */
+  .bubble-content hr{border:none;border-top:1px solid #33414f;margin:12px 0;}
+  .bubble-content footer{display:block;color:var(--sub);font-style:italic;font-size:12.5px;margin-top:8px;}
+
+  /* Real native table (RichBlockTable / RichBlockTableCell) */
+  .bubble-content table{
+    width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px;
+    border:1px solid #33414f;border-radius:10px;overflow:hidden;
+  }
+  .bubble-content th,.bubble-content td{
+    border:1px solid #33414f;padding:7px 10px;text-align:left;vertical-align:top;
+  }
+  .bubble-content th{background:rgba(255,255,255,.06);font-weight:700;color:#fff;}
+
+  /* Media (RichBlockPhoto/Video/Audio + custom tg- blocks) */
+  .bubble-content img{width:100%;border-radius:10px;margin:6px 0;display:block;background:#0c1319;max-height:260px;object-fit:cover;}
+  .bubble-content video{width:100%;border-radius:10px;margin:6px 0;display:block;background:#000;max-height:260px;}
+  .bubble-content audio{width:100%;margin:6px 0;display:block;}
+  .bubble-content .media-broken{
+    display:inline-block;background:#0c1319;color:var(--sub);font-size:11.5px;border-radius:6px;padding:6px 10px;margin:4px 0;
+  }
+  .bubble-content tg-map,.bubble-content tg-voice,.bubble-content tg-animation{
+    display:inline-block;background:#0c1319;color:var(--sub);font-size:11.5px;border-radius:6px;padding:6px 10px;margin:4px 0;
+  }
+  .bubble-content tg-map::before{content:"📍 Lokasi: " attr(lat) ", " attr(lng);}
+  .bubble-content tg-voice::before{content:"● Pesan suara";}
+  .bubble-content tg-animation::before{content:"▣ GIF";}
+  .bubble-content tg-slideshow,.bubble-content tg-collage{display:grid;gap:4px;margin:6px 0;}
+  .bubble-content tg-collage{grid-template-columns:1fr 1fr;}
+  .bubble-content tg-slideshow img,.bubble-content tg-collage img{margin:0;max-height:160px;}
+
+  /* Collapsible (RichBlockDetails) */
+  .bubble-content details{background:#0c1319;border-radius:8px;padding:8px 10px;margin:8px 0;}
+  .bubble-content details summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:600;}
+
+  .bubble-meta{display:flex;justify-content:flex-end;gap:6px;color:var(--sub);font-size:11.5px;margin-top:8px;}
+
+  /* Buttons — colored via Bot API 9.4+ InlineKeyboardButton.style */
+  .bubble-buttons{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+  .bubble-buttons .rich-btn{
+    display:block;text-align:center;text-decoration:none;cursor:pointer;
+    padding:10px;border-radius:8px;font-size:13.5px;font-weight:700;
+    background:rgba(255,255,255,.06);color:var(--accent);
+  }
+  .bubble-buttons .rich-btn.btn-style-primary{background:#2894e5;color:#fff;}
+  .bubble-buttons .rich-btn.btn-style-success{background:#31b545;color:#fff;}
+  .bubble-buttons .rich-btn.btn-style-danger{background:#e0473f;color:#fff;}
+
+  .empty-state{text-align:center;color:var(--sub);font-size:13.5px;padding:60px 30px;}
+
+  .toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%);
+    background:#1b2129;color:#fff;padding:11px 18px;border-radius:24px;font-size:13.5px;
+    box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:80;max-width:88%;text-align:center;
+  }
+  ::-webkit-scrollbar{width:0;height:0;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div class="sheet-overlay" id="addSheetOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Tambah Blok</h2>
+    <div class="block-grid" id="blockGrid"></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="settingsSheetOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Koneksi Bot</h2>
+    <div class="settings-field">
+      <label>Bot Token</label>
+      <input type="text" id="tokenInput" placeholder="123456:ABC-DEF...">
+    </div>
+    <div class="settings-field">
+      <label>Channel (ID atau @username)</label>
+      <input type="text" id="chatIdInput" placeholder="@nama_channel atau -100xxxxxxxxxx">
+    </div>
+    <div class="settings-hint">
+      Token dan ID channel hanya disimpan di memori browser selama sesi ini berjalan — tidak
+      pernah dikirim ke server manapun selain langsung ke Telegram. Muat ulang halaman akan menghapusnya.
+      Pastikan bot sudah ditambahkan sebagai <b>admin</b> di channel tujuan agar bisa mengirim pesan.
+    </div>
+    <div id="settingsStatus"></div>
+    <div class="settings-actions" style="margin-top:14px;">
+      <button class="btn-secondary" id="testConnBtn">Cek Koneksi</button>
+      <button class="btn-primary" id="saveConnBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ helpers ============ */
+  function esc(s){
+    return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function uid(){ return "b" + (++state.seq); }
+  function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild; }
+
+  /* ============ state ============ */
+  const state = {
+    seq:0,
+    mode:"write",
+    bannerOpen:true,
+    blocks:[],
+    buttons:[],
+    botToken:"",
+    chatId:"",
+    chatInfo:null,
+    draftSavedAt:null,
+  };
+
+  const BLOCK_DEFS = [
+    {type:"judul", label:"Judul", icon:"H"},
+    {type:"paragraf", label:"Paragraf", icon:"¶"},
+    {type:"kutipan", label:"Kutipan", icon:"❝"},
+    {type:"footer", label:"Footer", icon:"ab"},
+    {type:"daftar", label:"Daftar", icon:"≣"},
+    {type:"foto", label:"Foto", icon:"🖼"},
+    {type:"slideshow", label:"Slideshow", icon:"▣"},
+    {type:"audio", label:"Audio", icon:"♪"},
+    {type:"peta", label:"Peta", icon:"📍"},
+    {type:"kode", label:"Kode", icon:"</>"},
+    {type:"math", label:"Math", icon:"∑"},
+    {type:"tabel", label:"Tabel", icon:"▦"},
+    {type:"pembatas", label:"Pembatas", icon:"—"},
+    {type:"video", label:"Video", icon:"▶"},
+    {type:"animasi", label:"Animasi", icon:"GIF"},
+    {type:"suara", label:"P. Suara", icon:"●"},
+    {type:"pullquote", label:"Pull Quote", icon:"❝❞"},
+    {type:"lipatan", label:"Lipatan", icon:"▤"},
+    {type:"kolase", label:"Kolase", icon:"⊞"},
+  ];
+
+  function defaultBlock(type){
+    const id = uid();
+    switch(type){
+      case "judul": return {id,type,text:""};
+      case "paragraf": return {id,type,text:""};
+      case "kutipan": return {id,type,text:""};
+      case "footer": return {id,type,text:""};
+      case "daftar": return {id,type,ordered:false,items:[""]};
+      case "foto": return {id,type,url:"",caption:""};
+      case "slideshow": return {id,type,urls:[""],caption:""};
+      case "audio": return {id,type,url:"",title:""};
+      case "peta": return {id,type,lat:"",lng:""};
+      case "kode": return {id,type,code:""};
+      case "math": return {id,type,expr:""};
+      case "tabel": return {id,type,rows:[["",""],["",""]],hasHeader:true};
+      case "pembatas": return {id,type};
+      case "video": return {id,type,url:"",caption:""};
+      case "animasi": return {id,type,url:""};
+      case "suara": return {id,type,url:""};
+      case "pullquote": return {id,type,text:""};
+      case "lipatan": return {id,type,summary:"",text:""};
+      case "kolase": return {id,type,urls:["","","",""]};
+    }
+  }
+
+  /* ============ layout skeleton ============ */
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="icon-btn" id="closeBtn">✕</button>
+      <h1>Rich Message Builder</h1>
+      <div class="right">
+        <button class="icon-btn" id="chevBtn" style="font-size:15px;">▾</button>
+        <button class="icon-btn" id="menuBtn">⋮</button>
+      </div>
+    </div>
+    <div class="banner" id="banner">
+      ⏳ Draft &amp; pesan yang dibangun di sini hanya bertahan <b>selama sesi browser ini terbuka</b>.
+      Muat ulang halaman akan menghapus semuanya.
+    </div>
+    <div class="channel-row">
+      <div class="avatar" id="chAvatar">?</div>
+      <div class="channel-meta empty" id="chMeta">
+        <div class="name">Belum terhubung</div>
+        <div class="sub">Ketuk ⋮ untuk atur bot &amp; channel</div>
+      </div>
+      <div class="tabs">
+        <button id="tabWrite" class="active">Tulis</button>
+        <button id="tabPreview">Pratinjau</button>
+      </div>
+    </div>
+    <div class="editor" id="editor"></div>
+    <div class="bottombar">
+      <div class="save-draft" id="saveDraftBtn">Simpan Draft</div>
+      <button class="post-btn" id="postBtn">POSTING</button>
+    </div>
+  `;
+
+  document.getElementById("closeBtn").onclick = ()=>{
+    if(confirm("Kosongkan seluruh blok dan mulai dari awal?")){
+      state.blocks=[]; state.buttons=[]; renderEditor();
+    }
+  };
+  document.getElementById("chevBtn").onclick = ()=>{
+    state.bannerOpen = !state.bannerOpen;
+    document.getElementById("banner").classList.toggle("hidden", !state.bannerOpen);
+  };
+  document.getElementById("menuBtn").onclick = openSettings;
+  document.getElementById("chMeta").parentElement.querySelector(".channel-meta").onclick = openSettings;
+  document.getElementById("tabWrite").onclick = ()=>switchMode("write");
+  document.getElementById("tabPreview").onclick = ()=>switchMode("preview");
+  document.getElementById("saveDraftBtn").onclick = ()=>{
+    state.draftSavedAt = Date.now();
+    toast("Draft disimpan untuk sesi ini");
+  };
+  document.getElementById("postBtn").onclick = handlePost;
+
+  function switchMode(m){
+    state.mode = m;
+    document.getElementById("tabWrite").classList.toggle("active", m==="write");
+    document.getElementById("tabPreview").classList.toggle("active", m==="preview");
+    renderEditor();
+  }
+
+  /* ============ block grid sheet ============ */
+  const blockGrid = document.getElementById("blockGrid");
+  BLOCK_DEFS.forEach(def=>{
+    const opt = el(`<button class="block-opt">
+      <div class="ic">${def.icon}</div>
+      <span>${def.label}</span>
+    </button>`);
+    opt.onclick = ()=>{
+      state.blocks.push(defaultBlock(def.type));
+      closeSheet("addSheetOverlay");
+      renderEditor();
+      setTimeout(()=>{
+        const cards = document.querySelectorAll(".block-card");
+        if(cards.length) cards[cards.length-1].scrollIntoView({behavior:"smooth", block:"center"});
+      }, 60);
+    };
+    blockGrid.appendChild(opt);
+  });
+
+  function openSheet(id){ document.getElementById(id).classList.add("open"); }
+  function closeSheet(id){ document.getElementById(id).classList.remove("open"); }
+  document.getElementById("addSheetOverlay").addEventListener("click", e=>{
+    if(e.target.id==="addSheetOverlay") closeSheet("addSheetOverlay");
+  });
+  document.getElementById("settingsSheetOverlay").addEventListener("click", e=>{
+    if(e.target.id==="settingsSheetOverlay") closeSheet("settingsSheetOverlay");
+  });
+
+  /* ============ settings sheet ============ */
+  function openSettings(){
+    document.getElementById("tokenInput").value = state.botToken;
+    document.getElementById("chatIdInput").value = state.chatId;
+    document.getElementById("settingsStatus").innerHTML = "";
+    openSheet("settingsSheetOverlay");
+  }
+  document.getElementById("testConnBtn").onclick = async ()=>{
+    const token = document.getElementById("tokenInput").value.trim();
+    const chatId = document.getElementById("chatIdInput").value.trim();
+    const statusEl = document.getElementById("settingsStatus");
+    if(!token || !chatId){
+      statusEl.innerHTML = `<div class="status-line bad">Isi bot token dan channel dahulu.</div>`;
+      return;
+    }
+    statusEl.innerHTML = `<div class="status-line" style="background:#161b22;color:#c9d1d9;">Mengecek...</div>`;
+    try{
+      const me = await tgCall(token, "getMe", {});
+      if(!me.ok) throw new Error(me.description || "Token bot tidak valid");
+      const chat = await tgCall(token, "getChat", {chat_id: chatId});
+      if(!chat.ok) throw new Error(chat.description || "Channel tidak ditemukan / bot belum jadi admin");
+      state.chatInfo = chat.result;
+      statusEl.innerHTML = `<div class="status-line ok">Terhubung sebagai bot "${esc(me.result.first_name)}" ke "${esc(chat.result.title || chat.result.username || chatId)}".</div>`;
+    }catch(err){
+      statusEl.innerHTML = `<div class="status-line bad">Gagal: ${esc(err.message)}</div>`;
+    }
+  };
+  document.getElementById("saveConnBtn").onclick = ()=>{
+    state.botToken = document.getElementById("tokenInput").value.trim();
+    state.chatId = document.getElementById("chatIdInput").value.trim();
+    closeSheet("settingsSheetOverlay");
+    updateChannelChip();
+    if(state.botToken && state.chatId){
+      tgCall(state.botToken,"getChat",{chat_id:state.chatId}).then(r=>{
+        if(r.ok){ state.chatInfo = r.result; updateChannelChip(); }
+      }).catch(()=>{});
+    }
+  };
+
+  function updateChannelChip(){
+    const meta = document.getElementById("chMeta");
+    const avatar = document.getElementById("chAvatar");
+    if(state.botToken && state.chatId){
+      const title = (state.chatInfo && (state.chatInfo.title || state.chatInfo.username)) || state.chatId;
+      meta.classList.remove("empty");
+      meta.innerHTML = `<div class="name">${esc(title)}</div><div class="sub">Siap mengirim</div>`;
+      avatar.textContent = (title||"?").trim().charAt(0).toUpperCase();
+    } else {
+      meta.classList.add("empty");
+      meta.innerHTML = `<div class="name">Belum terhubung</div><div class="sub">Ketuk ⋮ untuk atur bot &amp; channel</div>`;
+      avatar.textContent = "?";
+    }
+  }
+
+  /* ============ telegram api ============ */
+  async function tgCall(token, method, payload){
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  /* ============ block editor rendering ============ */
+  const editorEl = document.getElementById("editor");
+
+  function renderEditor(){
+    editorEl.innerHTML = "";
+    if(state.mode === "preview"){ renderPreview(); return; }
+
+    if(state.blocks.length === 0){
+      editorEl.appendChild(el(`<div class="empty-state">Belum ada blok. Ketuk "+ Tambah Blok" di bawah untuk mulai menulis pesan.</div>`));
+    }
+    state.blocks.forEach((b, idx)=>{
+      editorEl.appendChild(buildBlockCard(b, idx));
+    });
+
+    editorEl.appendChild(el(`<div class="section-title">TOMBOL (INLINE)</div>`));
+    editorEl.appendChild(el(`<div class="section-desc">Tombol muncul di bawah pesan: link, atau salin teks.</div>`));
+    const btnWrap = document.createElement("div");
+    state.buttons.forEach(btn=> btnWrap.appendChild(buildButtonCard(btn)));
+    editorEl.appendChild(btnWrap);
+
+    const addBtnPill = el(`<button class="add-block-pill">+ Tambah tombol</button>`);
+    addBtnPill.onclick = ()=>{
+      state.buttons.push({id:uid(), kind:"link", label:"", value:"", style:"none"});
+      renderEditor();
+    };
+    editorEl.appendChild(addBtnPill);
+
+    const addBlockPill = el(`<button class="add-block-pill" style="border-style:dashed;">+ Tambah Blok</button>`);
+    addBlockPill.onclick = ()=> openSheet("addSheetOverlay");
+    editorEl.appendChild(addBlockPill);
+  }
+
+  function wireFooter(card, block, idx, typeLabel){
+    const foot = el(`
+      <div class="b-foot">
+        <div class="reorder-btns">
+          <button title="Naik">▲</button>
+          <button title="Turun">▼</button>
+        </div>
+        <div class="b-type-label">${typeLabel}</div>
+        <div class="b-actions">
+          <button class="chip-btn dup">⧉ Duplikat</button>
+          <button class="chip-btn danger del">✕ Hapus</button>
+        </div>
+      </div>
+    `);
+    const [up, down] = foot.querySelectorAll(".reorder-btns button");
+    up.onclick = ()=>{ if(idx>0){ [state.blocks[idx-1],state.blocks[idx]]=[state.blocks[idx],state.blocks[idx-1]]; renderEditor(); } };
+    down.onclick = ()=>{ if(idx<state.blocks.length-1){ [state.blocks[idx+1],state.blocks[idx]]=[state.blocks[idx],state.blocks[idx+1]]; renderEditor(); } };
+    foot.querySelector(".dup").onclick = ()=>{
+      const copy = JSON.parse(JSON.stringify(block)); copy.id = uid();
+      state.blocks.splice(idx+1,0,copy); renderEditor();
+    };
+    foot.querySelector(".del").onclick = ()=>{
+      state.blocks = state.blocks.filter(x=>x.id!==block.id); renderEditor();
+    };
+    card.appendChild(foot);
+    return card;
+  }
+
+  function buildBlockCard(block, idx){
+    const card = document.createElement("div");
+    card.className = "block-card";
+    const body = document.createElement("div");
+    body.className = "b-body";
+    card.appendChild(body);
+    let typeLabel = block.type.toUpperCase();
+
+    function textField(placeholder, key, multiline){
+      const input = document.createElement(multiline?"textarea":"input");
+      if(!multiline) input.type="text";
+      input.placeholder = placeholder;
+      input.value = block[key] || "";
+      input.oninput = ()=>{ block[key] = input.value; };
+      return input;
+    }
+
+    switch(block.type){
+      case "judul": {
+        typeLabel = "JUDUL";
+        body.appendChild(textField("Judul...", "text", false));
+        break;
+      }
+      case "paragraf": {
+        typeLabel = "PARAGRAF";
+        body.appendChild(textField("Tulis sesuatu...", "text", true));
+        break;
+      }
+      case "kutipan": {
+        typeLabel = "KUTIPAN";
+        body.appendChild(textField("Teks kutipan...", "text", true));
+        break;
+      }
+      case "footer": {
+        typeLabel = "FOOTER";
+        body.appendChild(textField("Teks footer (miring, kecil)...", "text", false));
+        break;
+      }
+      case "daftar": {
+        typeLabel = "DAFTAR";
+        const toggle = el(`<div class="field-row" style="margin-bottom:6px;">
+          <button class="chip-btn" id="ord0" style="flex:none;">• Bullet</button>
+          <button class="chip-btn" id="ord1" style="flex:none;">1. Nomor</button>
+        </div>`);
+        const b0 = toggle.querySelector("#ord0"), b1 = toggle.querySelector("#ord1");
+        function paintOrd(){ b0.style.background = block.ordered? "#1b2129":"var(--accent)"; b1.style.background = block.ordered? "var(--accent)":"#1b2129"; }
+        b0.onclick=()=>{block.ordered=false; paintOrd();}; b1.onclick=()=>{block.ordered=true; paintOrd();};
+        paintOrd();
+        body.appendChild(toggle);
+        const listWrap = document.createElement("div");
+        function renderItems(){
+          listWrap.innerHTML = "";
+          block.items.forEach((it, i)=>{
+            const row = el(`<div class="list-item-row"><input type="text" placeholder="Item ${i+1}"><button class="row-x">✕</button></div>`);
+            const inp = row.querySelector("input");
+            inp.value = it;
+            inp.oninput = ()=>{ block.items[i] = inp.value; };
+            row.querySelector(".row-x").onclick = ()=>{ block.items.splice(i,1); if(block.items.length===0) block.items.push(""); renderItems(); };
+            listWrap.appendChild(row);
+          });
+        }
+        renderItems();
+        body.appendChild(listWrap);
+        const addBtn = el(`<button class="add-sub-btn">+ Tambah item</button>`);
+        addBtn.onclick = ()=>{ block.items.push(""); renderItems(); };
+        body.appendChild(addBtn);
+        break;
+      }
+      case "foto": case "video": {
+        typeLabel = block.type==="foto"?"FOTO":"VIDEO";
+        body.appendChild(textField(block.type==="foto"?"URL gambar (https://...)":"URL video (https://...)", "url", false));
+        body.appendChild(textField("Keterangan (opsional)...", "caption", false));
+        break;
+      }
+      case "animasi": {
+        typeLabel = "ANIMASI";
+        body.appendChild(textField("URL GIF/animasi (https://...)", "url", false));
+        break;
+      }
+      case "audio": {
+        typeLabel = "AUDIO";
+        body.appendChild(textField("URL audio (https://...)", "url", false));
+        body.appendChild(textField("Judul lagu (opsional)...", "title", false));
+        break;
+      }
+      case "suara": {
+        typeLabel = "P. SUARA";
+        body.appendChild(textField("URL pesan suara (.ogg disarankan)", "url", false));
+        break;
+      }
+      case "slideshow": case "kolase": {
+        typeLabel = block.type==="slideshow"?"SLIDESHOW":"KOLASE";
+        const wrap = document.createElement("div");
+        function renderUrls(){
+          wrap.innerHTML = "";
+          block.urls.forEach((u,i)=>{
+            const row = el(`<div class="media-url-row"><input type="text" placeholder="URL gambar ${i+1}"><button class="row-x">✕</button></div>`);
+            const inp = row.querySelector("input"); inp.value = u;
+            inp.oninput = ()=>{ block.urls[i]=inp.value; };
+            row.querySelector(".row-x").onclick = ()=>{ block.urls.splice(i,1); if(block.urls.length===0) block.urls.push(""); renderUrls(); };
+            wrap.appendChild(row);
+          });
+        }
+        renderUrls();
+        body.appendChild(wrap);
+        const addBtn = el(`<button class="add-sub-btn">+ Tambah gambar (maks 10)</button>`);
+        addBtn.onclick = ()=>{ if(block.urls.length<10){ block.urls.push(""); renderUrls(); } };
+        body.appendChild(addBtn);
+        if(block.type==="slideshow"){ body.appendChild(textField("Keterangan (opsional)...", "caption", false)); }
+        break;
+      }
+      case "peta": {
+        typeLabel = "PETA";
+        const row = el(`<div class="field-row"></div>`);
+        row.appendChild(textField("Latitude","lat",false));
+        row.appendChild(textField("Longitude","lng",false));
+        body.appendChild(row);
+        break;
+      }
+      case "kode": {
+        typeLabel = "KODE";
+        body.appendChild(textField("Tempel kode di sini...", "code", true));
+        break;
+      }
+      case "math": {
+        typeLabel = "MATH";
+        body.appendChild(textField("Ekspresi (ditampilkan sebagai teks monospace)...", "expr", false));
+        const note = el(`<div class="field-label" style="text-transform:none;letter-spacing:0;margin-top:4px;">Dikirim sebagai rumus matematik asli (LaTeX) lewat Rich Message — bukan teks polos.</div>`);
+        body.appendChild(note);
+        break;
+      }
+      case "tabel": {
+        typeLabel = "TABEL";
+        if(block.hasHeader===undefined) block.hasHeader = true;
+        const hdrToggle = el(`<button class="chip-btn hdr-toggle" style="margin-top:2px;">${block.hasHeader?"☑":"☐"} Baris pertama jadi header</button>`);
+        hdrToggle.onclick = ()=>{
+          block.hasHeader = !block.hasHeader;
+          hdrToggle.textContent = (block.hasHeader?"☑":"☐") + " Baris pertama jadi header";
+        };
+        body.appendChild(hdrToggle);
+        const grid = document.createElement("div"); grid.className="table-grid";
+        function renderRows(){
+          grid.innerHTML="";
+          block.rows.forEach((row,ri)=>{
+            const rEl = document.createElement("div"); rEl.className="table-row";
+            row.forEach((cell,ci)=>{
+              const inp = document.createElement("input");
+              inp.type="text"; inp.value=cell; inp.placeholder=`R${ri+1}K${ci+1}`;
+              inp.oninput=()=>{ block.rows[ri][ci]=inp.value; };
+              rEl.appendChild(inp);
+            });
+            const del = el(`<button class="row-x">✕</button>`);
+            del.onclick=()=>{ if(block.rows.length>1){ block.rows.splice(ri,1); renderRows(); } };
+            rEl.appendChild(del);
+            grid.appendChild(rEl);
+          });
+        }
+        renderRows();
+        body.appendChild(grid);
+        const rowActions = el(`<div class="field-row" style="margin-top:8px;">
+          <button class="add-sub-btn" id="addRow">+ Baris</button>
+          <button class="add-sub-btn" id="addCol">+ Kolom</button>
+        </div>`);
+        rowActions.querySelector("#addRow").onclick=()=>{ const cols=block.rows[0].length; block.rows.push(new Array(cols).fill("")); renderRows(); };
+        rowActions.querySelector("#addCol").onclick=()=>{ block.rows.forEach(r=>r.push("")); renderRows(); };
+        body.appendChild(rowActions);
+        break;
+      }
+      case "pembatas": {
+        typeLabel = "PEMBATAS";
+        body.appendChild(el(`<div style="text-align:center;color:var(--sub);padding:10px 0;">— garis pembatas —</div>`));
+        break;
+      }
+      case "pullquote": {
+        typeLabel = "PULL QUOTE";
+        body.appendChild(textField("Kutipan besar yang ingin ditonjolkan...", "text", true));
+        break;
+      }
+      case "lipatan": {
+        typeLabel = "LIPATAN";
+        body.appendChild(textField("Judul singkat (selalu terlihat)...", "summary", false));
+        body.appendChild(textField("Isi tersembunyi (bisa dibuka/tutup)...", "text", true));
+        const note = el(`<div class="field-label" style="text-transform:none;letter-spacing:0;margin-top:4px;">Dikirim sebagai blok collapsible asli (bisa dibuka/tutup), bukan kutipan biasa.</div>`);
+        body.appendChild(note);
+        break;
+      }
+    }
+    return wireFooter(card, block, idx, typeLabel);
+  }
+
+  function buildButtonCard(btn){
+    const card = el(`
+      <div class="btn-card">
+        <button class="btn-remove">✕</button>
+        <div class="btn-kind-toggle">
+          <button class="k-link">🔗 Link</button>
+          <button class="k-copy">⧉ Salin</button>
+        </div>
+        <div class="field-label" style="margin-top:0;">Warna tombol</div>
+        <div class="style-swatch-row">
+          <button class="style-swatch" data-style="none">Standar</button>
+          <button class="style-swatch" data-style="primary">Biru</button>
+          <button class="style-swatch" data-style="success">Hijau</button>
+          <button class="style-swatch" data-style="danger">Merah</button>
+        </div>
+        <input type="text" placeholder="Judul tombol" class="lbl-inp">
+        <input type="text" placeholder="https://..." class="val-inp">
+      </div>
+    `);
+    const linkBtn = card.querySelector(".k-link"), copyBtn = card.querySelector(".k-copy");
+    const valInp = card.querySelector(".val-inp"), lblInp = card.querySelector(".lbl-inp");
+    const swatches = card.querySelectorAll(".style-swatch");
+    lblInp.value = btn.label; valInp.value = btn.value;
+    if(!btn.style) btn.style = "none";
+    function paint(){
+      linkBtn.classList.toggle("active", btn.kind==="link");
+      copyBtn.classList.toggle("active", btn.kind==="copy");
+      valInp.placeholder = btn.kind==="link" ? "https://..." : "Teks yang akan disalin";
+      swatches.forEach(sw=> sw.classList.toggle("active", sw.dataset.style===btn.style));
+    }
+    linkBtn.onclick = ()=>{ btn.kind="link"; paint(); };
+    copyBtn.onclick = ()=>{ btn.kind="copy"; paint(); };
+    swatches.forEach(sw=>{ sw.onclick = ()=>{ btn.style = sw.dataset.style; paint(); }; });
+    lblInp.oninput = ()=>{ btn.label = lblInp.value; };
+    valInp.oninput = ()=>{ btn.value = valInp.value; };
+    card.querySelector(".btn-remove").onclick = ()=>{
+      state.buttons = state.buttons.filter(b=>b.id!==btn.id); renderEditor();
+    };
+    paint();
+    return card;
+  }
+
+  /* ============ formatting -> Telegram Rich HTML (Bot API 10.1, sendRichMessage) ============ */
+  // This is the single source of truth for message markup: the exact same string
+  // this function returns is what gets sent to Telegram AND what gets rendered in
+  // the "Pratinjau" tab (see renderPreview). That's deliberate — preview and the
+  // real posted message can no longer drift apart, because they're built from the
+  // same call. Standard structural tags (table/th/td, h1-h6, ul/ol/li, hr, details/
+  // summary, img, video, audio, blockquote, pre/code) are real Rich HTML. The few
+  // block types Telegram has no standard-HTML equivalent for (map, voice notes,
+  // animations, collage, slideshow, pull quotes, math) use Telegram's own tg-
+  // prefixed custom tag convention, the same one used for <tg-spoiler> and
+  // <tg-emoji>.
+  function blockToHtml(b){
+    switch(b.type){
+      case "judul": return b.text ? `<h3>${esc(b.text)}</h3>` : "";
+      case "paragraf": return b.text ? `<p>${esc(b.text)}</p>` : "";
+      case "kutipan": return b.text ? `<blockquote>${esc(b.text)}</blockquote>` : "";
+      case "footer": return b.text ? `<footer>${esc(b.text)}</footer>` : "";
+      case "daftar": {
+        const items = b.items.filter(x=>x.trim()!=="");
+        if(!items.length) return "";
+        const tag = b.ordered ? "ol" : "ul";
+        return `<${tag}>` + items.map(it=>`<li>${esc(it)}</li>`).join("") + `</${tag}>`;
+      }
+      case "foto": {
+        if(!b.url) return "";
+        return `<img src="${esc(b.url)}">` + (b.caption ? `<p>${esc(b.caption)}</p>` : "");
+      }
+      case "video": {
+        if(!b.url) return "";
+        return `<video src="${esc(b.url)}"></video>` + (b.caption ? `<p>${esc(b.caption)}</p>` : "");
+      }
+      case "animasi": return b.url ? `<tg-animation src="${esc(b.url)}"></tg-animation>` : "";
+      case "audio": return b.url ? `<audio src="${esc(b.url)}"${b.title?` title="${esc(b.title)}"`:""}></audio>` : "";
+      case "suara": return b.url ? `<tg-voice src="${esc(b.url)}"></tg-voice>` : "";
+      case "peta": return (b.lat && b.lng) ? `<tg-map lat="${esc(b.lat)}" lng="${esc(b.lng)}"></tg-map>` : "";
+      case "slideshow": {
+        const urls = (b.urls||[]).filter(Boolean);
+        if(!urls.length) return "";
+        return `<tg-slideshow>` + urls.map(u=>`<img src="${esc(u)}">`).join("") + `</tg-slideshow>` + (b.caption ? `<p>${esc(b.caption)}</p>` : "");
+      }
+      case "kolase": {
+        const urls = (b.urls||[]).filter(Boolean);
+        if(!urls.length) return "";
+        return `<tg-collage>` + urls.map(u=>`<img src="${esc(u)}">`).join("") + `</tg-collage>`;
+      }
+      case "kode": return b.code ? `<pre><code>${esc(b.code)}</code></pre>` : "";
+      case "math": return b.expr ? `<tg-math>${esc(b.expr)}</tg-math>` : "";
+      case "tabel": {
+        const rows = b.rows.filter(r=>r.some(c=>c.trim()!==""));
+        if(!rows.length) return "";
+        const cell = (ri)=> (tableHasHeader(b) && ri===0) ? "th" : "td";
+        const trs = rows.map((r,ri)=> "<tr>" + r.map(c=>`<${cell(ri)}>${esc(c)}</${cell(ri)}>`).join("") + "</tr>").join("");
+        return `<table>${trs}</table>`;
+      }
+      case "pembatas": return "<hr>";
+      case "pullquote": return b.text ? `<tg-pullquote>${esc(b.text)}</tg-pullquote>` : "";
+      case "lipatan": {
+        if(!b.text) return "";
+        const summary = b.summary ? esc(b.summary) : "Lihat lebih banyak";
+        return `<details><summary>${summary}</summary>${esc(b.text)}</details>`;
+      }
+      default: return "";
+    }
+  }
+  function tableHasHeader(b){ return b.hasHeader!==false; }
+
+  function buildButtonsMarkup(){
+    const rows = state.buttons
+      .filter(b=> b.label.trim() && b.value.trim())
+      .map(b=>{
+        const btn = (b.kind==="link") ? {text:b.label, url:b.value} : {text:b.label, copy_text:{text:b.value}};
+        if(b.style && b.style!=="none") btn.style = b.style;
+        return [btn];
+      });
+    return rows.length ? {inline_keyboard: rows} : null;
+  }
+
+  /* ============ preview rendering ============ */
+  // Every block is rendered through blockToHtml() — the exact function that
+  // builds the payload sent to Telegram — via innerHTML. So "Pratinjau" isn't a
+  // second, hand-maintained approximation of the message; it's a direct render
+  // of the real markup. If it looks right here, it looks the same in the channel.
+  function renderPreview(){
+    const wrap = el(`<div class="preview-wrap"></div>`);
+    wrap.appendChild(el(`<div class="preview-day">Hari ini</div>`));
+    if(state.blocks.length===0 && state.buttons.length===0){
+      wrap.appendChild(el(`<div class="empty-state">Belum ada isi untuk dipratinjau.</div>`));
+      editorEl.appendChild(wrap);
+      return;
+    }
+    const bubble = el(`<div class="bubble"><div class="from">${esc((state.chatInfo && (state.chatInfo.title||state.chatInfo.username)) || "Channel Anda")}</div></div>`);
+    const content = document.createElement("div");
+    content.className = "bubble-content";
+
+    let hasContent = false;
+    state.blocks.forEach(b=>{
+      const html = blockToHtml(b);
+      if(!html) return;
+      hasContent = true;
+      const node = document.createElement("div");
+      node.className = "rich-block";
+      node.innerHTML = html;
+      // Preview-only niceties (native player controls, broken-image fallback) —
+      // cosmetic additions to the rendered DOM, they never touch blockToHtml's
+      // output or what actually gets posted.
+      node.querySelectorAll("video,audio").forEach(m=> m.controls = true);
+      node.querySelectorAll("img").forEach(img=>{
+        img.onerror = ()=>{ img.replaceWith(el(`<div class="media-broken">🖼 Gambar tidak bisa dimuat</div>`)); };
+      });
+      content.appendChild(node);
+    });
+    if(!hasContent){
+      content.appendChild(el(`<div class="empty-state" style="padding:30px 10px;">Belum ada isi untuk dipratinjau.</div>`));
+    }
+    bubble.appendChild(content);
+
+    const btns = state.buttons.filter(b=>b.label.trim() && b.value.trim());
+    if(btns.length){
+      const bWrap = document.createElement("div"); bWrap.className="bubble-buttons";
+      btns.forEach(b=>{
+        const styleClass = "btn-style-" + ((b.style && b.style!=="none") ? b.style : "default");
+        if(b.kind==="link"){
+          bWrap.appendChild(el(`<a class="rich-btn ${styleClass}" href="${esc(b.value)}" target="_blank" rel="noopener">${esc(b.label)}</a>`));
+        } else {
+          bWrap.appendChild(el(`<div class="rich-btn ${styleClass}">${esc(b.label)}</div>`));
+        }
+      });
+      bubble.appendChild(bWrap);
+    }
+    bubble.appendChild(el(`<div class="bubble-meta"><span>👁 —</span><span>${new Date().toTimeString().slice(0,5)}</span></div>`));
+    wrap.appendChild(bubble);
+    editorEl.appendChild(wrap);
+  }
+
+  /* ============ posting to telegram ============ */
+  function toast(msg){
+    const t = el(`<div class="toast">${esc(msg)}</div>`);
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 3200);
+  }
+
+  async function handlePost(){
+    if(!state.botToken || !state.chatId){
+      toast("Atur bot token & channel dulu (ketuk ⋮)");
+      openSettings();
+      return;
+    }
+    if(state.blocks.length===0 && state.buttons.length===0){
+      toast("Tambahkan minimal satu blok isi pesan");
+      return;
+    }
+    const postBtn = document.getElementById("postBtn");
+    postBtn.disabled = true; postBtn.classList.remove("err");
+    const originalLabel = postBtn.textContent;
+    postBtn.textContent = "Mengirim...";
+
+    try{
+      const reply_markup = buildButtonsMarkup();
+      let html = state.blocks.map(blockToHtml).filter(Boolean).join("");
+      if(!html && reply_markup) html = "<p>&#8203;</p>"; // tombol tanpa isi teks tetap butuh body yang tidak kosong
+      if(!html) throw new Error("Tidak ada isi yang bisa dikirim.");
+
+      const payload = { chat_id: state.chatId, rich_message: { html } };
+      if(reply_markup) payload.reply_markup = reply_markup;
+
+      // Satu panggilan sendRichMessage asli (Bot API 10.1) — ini yang membuat
+      // pesan yang terkirim benar-benar SendRichMessage Ori, bukan tiruan lewat
+      // kombinasi sendPhoto/sendMediaGroup/sendMessage seperti sebelumnya.
+      const r = await tgCall(state.botToken, "sendRichMessage", payload);
+      if(!r.ok) throw new Error(r.description || "Gagal mengirim Rich Message");
+
+      postBtn.textContent = originalLabel;
+      postBtn.disabled = false;
+      toast("Berhasil diposting ke channel ✅");
+    }catch(err){
+      postBtn.textContent = originalLabel;
+      postBtn.disabled = false;
+      postBtn.classList.add("err");
+      toast("Gagal: " + err.message);
+      setTimeout(()=>postBtn.classList.remove("err"), 2600);
+    }
+  }
+
+  renderEditor();
+})();
+</script>
+</body>
+</html>
